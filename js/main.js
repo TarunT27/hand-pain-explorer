@@ -6,7 +6,7 @@ import { buildSoftTissues } from './soft.js';
 import { Skin } from './skin.js';
 import { G, LAYERS, LAYER_INDEX, layerQ, dissolveValue } from './materials.js';
 import { buildPoses, buildExercises, PRESETS } from './poses.js';
-import { REGIONS, SYMPTOMS, GENERAL_RED_FLAGS, EXERCISE_INFO, regionAnchors, QUICK_GROUPS, NERVES, TESTS } from './content.js';
+import { REGIONS, SYMPTOMS, GENERAL_RED_FLAGS, EXERCISE_INFO, regionAnchors, QUICK_GROUPS, NERVES, TESTS, REFS, CONDITION_SOURCES, TEST_SOURCES, NERVE_SOURCES, CONTENT_REVIEW } from './content.js';
 import { analyze, fitLabel, spotTitle, summaryText } from './analysis.js';
 import { Tracker, HandTracks, describeHand, retarget, modelRestQuat, palmFacesCamera, mapPointOnHand, drawOverlay } from './tracking.js';
 
@@ -175,7 +175,7 @@ function setNerveMap(on) {
   if (on && state.peel > 0.5) setPeel(0);
 }
 $('#nerveMap').addEventListener('change', (e) => setNerveMap(e.target.checked));
-$('#nerveLegend').innerHTML = Object.values(NERVES).map((n) => `<div class="nl-row"><i style="--c:${n.color}"></i><div><b>${n.label}</b><small>${n.area}</small></div></div>`).join('');
+$('#nerveLegend').innerHTML = `<div class="nl-src">${srcHTML(NERVE_SOURCES, 'Source')}</div>` + Object.values(NERVES).map((n) => `<div class="nl-row"><i style="--c:${n.color}"></i><div><b>${n.label}</b><small>${n.area}</small></div></div>`).join('');
 const TONES = ['#f2cdb8', '#dca58c', '#c08466', '#8e5b43', '#5f3b2b'];
 TONES.forEach((t, i) => {
   const b = document.createElement('button');
@@ -424,6 +424,13 @@ $('#btnMap').addEventListener('click', () => { state.panel = 'analysis'; renderI
 // ---------------------------------------------------------------- info panel
 const info = $('#info');
 function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+// Source links: accepts REFS keys or ref objects
+function srcHTML(list, label = 'Sources') {
+  const refs = (list || []).map((r) => (typeof r === 'string' ? REFS[r] : r)).filter(Boolean);
+  if (!refs.length) return '';
+  return `<p class="srcs"><span>${label}:</span> ${refs.map((r) => `<a href="${esc(r.url)}" target="_blank" rel="noopener" title="${esc(r.org + ' — ' + r.title)}">${esc(r.org)}: ${esc(r.title)}</a>`).join('<i>·</i>')}</p>`;
+}
+const REVIEW_NOTE = `<button class="link review-link" data-review>Sources &amp; review</button>`;
 const symLabel = Object.fromEntries(SYMPTOMS.map((s) => [s.key, s.label]));
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
@@ -442,6 +449,8 @@ function testCardHTML(k, compact = false) {
     <div class="test-top"><div><b>${esc(T.name)}</b><small>checks for ${esc(T.for)}</small></div><button class="ex-btn small" data-show="${k}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Show me</button></div>
     ${compact ? '' : `<p>${esc(T.how)}</p>`}
     <p class="test-pos"><b>Positive if:</b> ${esc(T.positive)}</p>
+    ${T.accuracy && !compact ? `<p class="test-acc"><b>How reliable:</b> ${esc(T.accuracy)}</p>` : ''}
+    ${compact ? '' : srcHTML(TEST_SOURCES[k], 'Source')}
     ${T.caution ? `<p class="test-caution">${esc(T.caution)}</p>` : ''}
     <div class="seg-row"><span>Did it reproduce your symptoms?</span><div class="seg-group">${ans('yes', 'Yes')}${ans('no', 'No')}${ans('unsure', 'Not sure')}</div></div>
   </div>`;
@@ -458,6 +467,7 @@ function bindCommon() {
   }));
   info.querySelectorAll('[data-region]').forEach((b) => b.addEventListener('click', () => selectRegion(b.dataset.region)));
   info.querySelectorAll('[data-ex]').forEach((b) => b.addEventListener('click', () => startExercise(b.dataset.ex)));
+  info.querySelectorAll('[data-review]').forEach((b) => b.addEventListener('click', openReview));
   const close = info.querySelector('#closePanel');
   if (close) close.addEventListener('click', clearSelection);
 }
@@ -485,7 +495,7 @@ function renderHome() {
       <p class="lead">Click a spot on the 3D hand, or turn on the webcam and <b>point at the sore spot on your own hand</b> with your other index finger. Save each spot to your pain map with how much it hurts — the more you add, the better the pattern.</p>
       ${QUICK_GROUPS.map((g) => `<div class="quick"><h4>${g.label}</h4><div class="chips">${g.items.map(([k, l]) => `<button class="chip" data-region="${k}">${l}</button>`).join('')}</div></div>`).join('')}
       <div class="tipbox"><b>Tingling or numbness?</b> Turn on <b>Nerve map</b> in the Layers panel to see which nerve supplies each patch of skin.</div>
-      <p class="disclaimer">For education only — not a diagnosis. If pain lasts more than 1–2 weeks, wakes you at night, or follows an injury, see a clinician (GP, physiotherapist or hand therapist).</p>
+      <p class="disclaimer">For education only — not a diagnosis. If pain lasts more than 1–2 weeks, wakes you at night, or follows an injury, see a clinician (GP, physiotherapist or hand therapist). ${REVIEW_NOTE}</p>
     </div>`;
   const go = info.querySelector('#goAnalysis');
   if (go) go.addEventListener('click', () => { state.panel = 'analysis'; renderInfo(); });
@@ -538,7 +548,7 @@ function renderSpot() {
         <h4 class="urgent">Get urgent care for</h4>
         <ul>${GENERAL_RED_FLAGS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </div>
-      <p class="disclaimer">Educational information, not a diagnosis or treatment plan. Only a clinician who examines you can tell what is causing your pain.</p>
+      <p class="disclaimer">Educational information, not a diagnosis or treatment plan. Only a clinician who examines you can tell what is causing your pain. ${REVIEW_NOTE}</p>
     </div>`;
   info.querySelectorAll('[data-finger]').forEach((b) => b.addEventListener('click', () => selectRegion(sel.region, b.dataset.finger)));
   const range = info.querySelector('#painRange');
@@ -578,6 +588,7 @@ function renderCauses() {
       <summary><span class="cname">${esc(c.name)}</span><span class="badges">${m ? `<span class="badge match">${m} match${m > 1 ? 'es' : ''}</span>` : ''}${c.common ? '<span class="badge">Common</span>' : ''}</span></summary>
       <p>${esc(c.desc)}</p>
       <p class="helps"><b>What helps:</b> ${esc(c.helps)}</p>
+      ${srcHTML(CONDITION_SOURCES[c.id])}
     </details>`).join('');
 }
 
@@ -611,7 +622,9 @@ function renderAnalysis() {
             <div class="fit-top"><b>${esc(r.name)}</b><span class="badge ${r.rel >= 0.75 ? 'match' : ''}">${fitLabel(r.rel)}</span></div>
             <div class="fit-bar"><i style="width:${Math.round(r.rel * 100)}%"></i></div>
             <ul class="fit-why">${r.reasons.slice(0, 4).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+            ${r.note ? `<p class="fit-note">${esc(r.note)}</p>` : ''}
             ${r.helps ? `<p class="helps"><b>What helps:</b> ${esc(r.helps)}</p>` : ''}
+            ${srcHTML(r.sources)}
             ${r.urgent ? '<p class="test-caution">This one needs prompt medical attention if it matches.</p>' : ''}
             ${r.tests.length ? `<div class="fit-tests">${r.tests.map((k) => `<button class="chip small" data-jump="${k}">Check: ${esc(TESTS[k].name)}</button>`).join('')}</div>` : ''}
           </div>`).join('') : '<p class="lead">Nothing stands out yet — add a pain level and symptoms to your spots.</p>'}
@@ -622,7 +635,7 @@ function renderAnalysis() {
         <h4 class="urgent">Get urgent care for</h4>
         <ul>${GENERAL_RED_FLAGS.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       </div>
-      <p class="disclaimer">This ranks common conditions by how well they match what you entered. It is not a diagnosis — several conditions often overlap, and a clinician's examination matters more than any pattern.</p>
+      <p class="disclaimer">This ranks common conditions by how well they match what you entered. It is not a diagnosis — several conditions often overlap, and a clinician's examination matters more than any pattern. ${REVIEW_NOTE}</p>
     </div>`;
   const sn = info.querySelector('#showNerves');
   if (sn) sn.addEventListener('click', () => setNerveMap(true));
@@ -972,6 +985,14 @@ function toast(msg, ms = 1900) {
   toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 $('#btnHelp').addEventListener('click', () => $('#helpDlg').showModal());
+$('#reviewInfo').innerHTML = `<p><b>Last checked:</b> ${esc(CONTENT_REVIEW.date)}. ${esc(CONTENT_REVIEW.summary)}</p>
+  <p>Each condition and self-check links to the pages it was checked against (${Object.keys(REFS).length} sources). Details of what was checked and corrected are in
+  <a href="https://github.com/TarunT27/hand-pain-explorer/blob/main/CONTENT_REVIEW.md" target="_blank" rel="noopener">CONTENT_REVIEW.md</a>.
+  Spotted something wrong? <a href="${esc(CONTENT_REVIEW.issues)}" target="_blank" rel="noopener">Report it on GitHub</a>.</p>`;
+function openReview() {
+  $('#helpDlg').showModal();
+  $('#reviewInfo').scrollIntoView({ block: 'start' });
+}
 $('#helpClose').addEventListener('click', () => $('#helpDlg').close());
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;

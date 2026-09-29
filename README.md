@@ -10,6 +10,9 @@ An interactive 3D hand for exploring hand pain. Peel back skin, muscles, tendons
 
 **Layered anatomy you can peel**
 - Five layers — skin, muscles, tendons & ligaments, nerves & vessels, bones & joints — built procedurally in Three.js.
+- Bones are sculpted from anatomical shape definitions: two-knobbed knuckle heads, cupped joint bases, spade-shaped fingertip bones, a waisted scaphoid, a crescent lunate, the hook of the hamate, and the radius with its styloid and Lister's tubercle.
+- The skin has the palm's main creases, finger and wrist creases, knuckle wrinkles, veins on the back of the hand, fingertip pads and nails with a lunula.
+- Soft tissues include the extensor hood (sagittal and lateral bands), finger pulleys, volar plates, the carpal tunnel ligament and the dorsal veins.
 - Drag the Layers slider (or press `[` / `]`) and each layer dissolves away like a glove sliding off.
 - Everything is attached to the skeleton: tendons slide over the joints, muscles bulge, and the skin bends and webs as the fingers move.
 - Hover any structure to see what it is and what it does.
@@ -25,7 +28,7 @@ An interactive 3D hand for exploring hand pain. Peel back skin, muscles, tendons
 **Pain map and "What might fit"**
 - Save up to 8 sore spots, each with a 0–10 pain level and symptoms such as numb/tingling, clicking/locking, stiff or weak grip.
 - The **nerve map** colours the skin by which nerve supplies it (median, ulnar or radial), and numb spots are matched to the nerve they share.
-- Nine self-checks — Phalen, Tinel, Finkelstein, grind, tabletop, fist-and-release, finger-cross, press-up and snuffbox — are demonstrated on the model, and your answers refine the ranking.
+- Nine self-checks — Phalen, Tinel, Eichhoff (home Finkelstein), grind, tabletop, fist-and-release, finger-cross, press-up and snuffbox — are demonstrated on the model, and your answers refine the ranking.
 - A ranked list of conditions that fit, with reasons, what usually helps, and a **Copy summary** button to share with a clinician.
 
 <p>
@@ -36,6 +39,12 @@ An interactive 3D hand for exploring hand pain. Peel back skin, muscles, tendons
 **Content**
 - 17 hand, wrist and forearm areas, each with the structures underneath, common causes, tips, gentle movements and red flags.
 - Animated exercises: tendon glides, thumb opposition, finger spreads, wrist bend and lift, median nerve glide and thumb circles.
+
+## Sources and review
+
+Every condition and self-check links to the pages it was checked against: NHS, AAOS OrthoInfo, StatPearls (NCBI Bookshelf) and a few PubMed Central reviews, 61 sources in all. [CONTENT_REVIEW.md](CONTENT_REVIEW.md) lists what was checked, what was corrected, the known limitations and a checklist for clinician review.
+
+**The content hasn't yet been reviewed by a licensed clinician.** If you are one and can help, please [open an issue](https://github.com/TarunT27/hand-pain-explorer/issues).
 
 ## Run it locally
 
@@ -69,13 +78,14 @@ Because it's static, it runs on GitHub Pages, Netlify, Vercel or any HTTPS host.
 
 | File | What it does |
 | --- | --- |
-| `js/rig.js` | Joint hierarchy (right-hand base model, mirrored for left hands), lathe-built bones, carpals, pose maths |
+| `js/rig.js` | Joint hierarchy (right-hand base model, mirrored for left hands), bone placement, pose maths |
+| `js/bonemesh.js` | Anatomical bone shapes as signed-distance functions, meshed at load time with surface nets |
 | `js/soft.js` | Muscles, tendons, pulleys, ligaments, nerves and arteries as tubes anchored to the bones and rebuilt as the hand moves |
-| `js/skin.js` | Skin as a ray-marched signed-distance field (smooth-blended round cones) with nails, ambient occlusion, nerve territories and the pain heat map |
+| `js/skin.js` | Skin as a ray-marched signed-distance field (smooth-blended round cones) with creases, wrinkles, veins, nails, ambient occlusion, nerve territories and the pain heat map |
 | `js/materials.js` | Shared shader patch: peel/dissolve, pain hotspot, hover and structure highlight |
 | `js/tracking.js` | MediaPipe setup, One Euro smoothing, hand identity, gestures, retargeting landmarks onto joint angles, fingertip-to-hand mapping |
 | `js/poses.js` | Pose presets, exercise and self-check timelines, thumb inverse kinematics |
-| `js/content.js` | Regions, causes, tips, red flags, nerve areas, conditions and self-checks |
+| `js/content.js` | Regions, causes, tips, red flags, nerve areas, conditions, self-checks and their sources |
 | `js/analysis.js` | Scores conditions from the pain map, symptoms, nerve pattern and self-check answers |
 | `js/main.js` | Scene, picking, panels, pain map, webcam gestures and the render loop |
 

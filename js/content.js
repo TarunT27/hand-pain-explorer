@@ -62,8 +62,8 @@ export const REGIONS = {
     ],
     causes: [
       { id: 'oa', name: 'Osteoarthritis (Heberden\'s nodes)', common: true, tags: ['aching', 'stiff', 'lump'], desc: 'Bony bumps on the end knuckles with aching and stiffness, common after 50 and often runs in families.', helps: 'Warm water in the morning, gentle movement, larger-grip tools; topical anti-inflammatory gels can ease flares.' },
-      { id: 'mallet', name: 'Mallet finger', common: true, tags: ['injury'], desc: 'The fingertip droops and cannot straighten on its own after being jammed (e.g. by a ball). The extensor tendon is torn or pulled off with a bone fleck.', helps: 'Needs a splint holding the tip straight continuously for 6–8 weeks — see a clinician within a few days.' },
-      { id: 'jersey', name: 'Jersey finger (FDP avulsion)', tags: ['injury', 'weak'], desc: 'After grabbing a jersey or being yanked, the fingertip cannot bend. Most often the ring finger.', helps: 'Time-sensitive — surgical repair works best within 7–10 days.' },
+      { id: 'mallet', name: 'Mallet finger', common: true, tags: ['injury'], desc: 'The fingertip droops and cannot straighten on its own after being jammed (e.g. by a ball). The extensor tendon is torn or pulled off with a bone fleck.', helps: 'Needs a splint holding the tip straight at all times for up to 8 weeks — get it checked promptly, ideally the same day.' },
+      { id: 'jersey', name: 'Jersey finger (FDP avulsion)', tags: ['injury', 'weak'], desc: 'After grabbing a jersey or being yanked, the fingertip cannot bend. About 3 in 4 cases involve the ring finger.', helps: 'Time-sensitive — repair within about 10 days gives the best results, so get seen promptly.' },
       { id: 'ganglion', name: 'Mucous (digital myxoid) cyst', tags: ['lump'], desc: 'A small, smooth bump between the end knuckle and the nail, linked to arthritis. It can groove the nail.', helps: 'Often left alone; don\'t pop it (infection risk). Can be removed if painful.' },
       { id: 'psa', name: 'Psoriatic arthritis', tags: ['swelling', 'stiff'], desc: 'Swollen end knuckles, a "sausage" finger or pitted nails, often with psoriasis.', helps: 'See a GP / rheumatologist — early treatment protects joints.' },
     ],
@@ -82,6 +82,7 @@ export const REGIONS = {
     structures: [
       { label: 'PIP joint cartilage', tags: ['cartilage'], layer: 'bones' },
       { label: 'Collateral ligaments', tags: ['collateral'], layer: 'tendons' },
+      { label: 'Volar plate', tags: ['volar-plate'], layer: 'tendons' },
       { label: 'Superficial flexor tendon (FDS)', tags: ['fds'], layer: 'tendons' },
       { label: 'Extensor mechanism', tags: ['edc'], layer: 'tendons' },
     ],
@@ -135,6 +136,7 @@ export const REGIONS = {
       { label: 'Metacarpal head', tags: ['metacarpal'], layer: 'bones' },
       { label: 'Knuckle cartilage', tags: ['cartilage'], layer: 'bones' },
       { label: 'Extensor tendon', tags: ['edc'], layer: 'tendons' },
+      { label: 'Sagittal bands', tags: ['sagittal'], layer: 'tendons' },
       { label: 'Interosseous muscles', tags: ['interossei', 'di1'], layer: 'muscles' },
     ],
     causes: [
@@ -184,7 +186,7 @@ export const REGIONS = {
       { label: 'Adductor pollicis', tags: ['adductor'], layer: 'muscles' },
     ],
     causes: [
-      { id: 'skiers-thumb', name: 'Skier\'s / gamekeeper\'s thumb (UCL sprain or tear)', common: true, tags: ['injury', 'weak', 'swelling'], desc: 'Pain and weakness on the index-finger side of the thumb knuckle after the thumb is forced outward (fall with a ski pole, ball).', helps: 'Thumb spica splint and ice. A complete tear may need surgery — get assessed within 1–2 weeks.' },
+      { id: 'skiers-thumb', name: 'Skier\'s / gamekeeper\'s thumb (UCL sprain or tear)', common: true, tags: ['injury', 'weak', 'swelling'], desc: 'Pain and weakness on the index-finger side of the thumb knuckle after the thumb is forced outward (fall with a ski pole, ball).', helps: 'Thumb spica splint and ice. A severe sprain or complete tear may need surgery — get it assessed promptly.' },
       { id: 'trigger', name: 'Trigger thumb', common: true, tags: ['clicking', 'lump'], desc: 'Tender nodule on the palm side of the thumb knuckle with catching.', helps: 'Splint, rest from pinching, injection.' },
       { id: 'sprain', name: 'Radial collateral ligament sprain', tags: ['injury'], desc: 'Pain on the outer side of the thumb knuckle after a sideways force.', helps: 'Splint and ice; get checked if it feels unstable.' },
       { id: 'oa', name: 'MCP arthritis', tags: ['aching', 'stiff'], desc: 'Aching and stiffness of the thumb knuckle, sometimes with hyperextension.', helps: 'Splinting and joint-protection techniques.' },
@@ -291,6 +293,7 @@ export const REGIONS = {
       { label: 'Dorsal interossei', tags: ['interossei', 'di1'], layer: 'muscles' },
       { label: 'Metacarpals', tags: ['metacarpal'], layer: 'bones' },
       { label: 'Superficial radial nerve', tags: ['sup-radial'], layer: 'nerves' },
+      { label: 'Dorsal veins', tags: ['veins'], layer: 'nerves' },
     ],
     causes: [
       { id: 'extensor', name: 'Extensor tendinitis', common: true, tags: ['aching', 'sharp', 'swelling'], desc: 'Aching along the tendons from typing, gaming or lifting with the wrist bent back.', helps: 'Relative rest, neutral wrist posture, ice after activity.' },
@@ -342,7 +345,7 @@ export const REGIONS = {
       { label: 'Radial artery', tags: ['radial-artery'], layer: 'nerves' },
     ],
     causes: [
-      { id: 'dequervain', name: 'De Quervain\'s tenosynovitis', common: true, tags: ['sharp', 'swelling'], desc: 'Pain over the thumb side of the wrist, worse when lifting (e.g. a baby), gripping or texting. Tucking the thumb into a fist and tilting the wrist down hurts (Finkelstein test).', helps: 'Thumb spica splint, rest from the aggravating movement, ice; injection is very effective if it persists.' },
+      { id: 'dequervain', name: 'De Quervain\'s tenosynovitis', common: true, tags: ['sharp', 'swelling'], desc: 'Pain over the thumb side of the wrist, worse when lifting (e.g. a baby), gripping or texting. Tucking the thumb into a fist and tilting the wrist toward the little finger hurts (Eichhoff test, often called Finkelstein).', helps: 'Thumb spica splint, rest from the aggravating movement, ice; injection is very effective if it persists.' },
       { id: 'scaphoid', name: 'Scaphoid fracture', common: true, tags: ['injury'], desc: 'Pain in the snuffbox after a fall on an outstretched hand. May not show on the first X-ray.', helps: 'Treat as a fracture until proven otherwise — they can fail to heal.' },
       { id: 'intersection', name: 'Intersection syndrome', tags: ['sharp', 'clicking', 'swelling'], desc: 'Pain and a squeaky feel 4–6 cm above the wrist on the back-thumb side; rowers, lifters, canoeists.', helps: 'Rest and splint; modify technique.' },
       { id: 'wartenberg', name: 'Wartenberg\'s syndrome', tags: ['numb'], desc: 'Burning or tingling over the back of the thumb from a tight watch, bracelet or cast.', helps: 'Loosen straps; avoid pressure.' },
@@ -486,7 +489,7 @@ export const NERVES = {
 // Canonical names for conditions that appear in several regions, plus nerve links
 // and urgency. Anything not listed falls back to its first mention in REGIONS.
 export const CONDITIONS = {
-  cts: { name: 'Carpal tunnel syndrome', nerve: 'median', helps: 'Neutral wrist splint at night, nerve glides, fewer sustained wrist bends; injection or surgery if it persists.' },
+  cts: { name: 'Carpal tunnel syndrome', nerve: 'median', note: 'The palm itself usually keeps normal feeling: its skin branch leaves the median nerve above the wrist and runs over, not through, the carpal tunnel.', helps: 'Neutral wrist splint at night, nerve glides, fewer sustained wrist bends; injection or surgery if it persists.' },
   'ulnar-nerve': { name: 'Ulnar nerve compression', nerve: 'ulnar', helps: 'Avoid leaning on elbows or handlebars, keep elbows straighter at night; see a clinician if weakness develops.' },
   guyon: { name: 'Ulnar nerve compression at the wrist (Guyon\'s canal)', nerve: 'ulnar' },
   cubital: { name: 'Cubital tunnel syndrome (ulnar nerve at the elbow)', nerve: 'ulnar' },
@@ -500,7 +503,7 @@ export const CONDITIONS = {
   overuse: { name: 'Overuse / tendon strain', helps: 'Relative rest, micro-breaks, wider grips; gradual strengthening once it settles.' },
   dupuytren: { name: 'Dupuytren\'s disease', helps: 'Monitor with the tabletop test; treatment when the hand can no longer lie flat.' },
   'cmc-oa': { name: 'Basal thumb (CMC) arthritis', helps: 'Thumb splint for tasks or at night, wider grips, jar openers, stabilising exercises.' },
-  mallet: { name: 'Mallet finger / thumb (extensor tendon injury)', helps: 'Splint the tip straight continuously for 6–8 weeks — get it checked within a few days.' },
+  mallet: { name: 'Mallet finger / thumb (extensor tendon injury)', helps: 'Splint the tip straight at all times for up to 8 weeks — get it checked promptly.' },
   paronychia: { name: 'Paronychia (nail-fold infection)' },
   scaphoid: { name: 'Scaphoid fracture', urgent: true, helps: 'Treat as a fracture until an X-ray (or MRI) rules it out — these can fail to heal.' },
   extensor: { name: 'Extensor tendinitis / dorsal wrist impingement' },
@@ -518,50 +521,168 @@ export const CONDITIONS = {
 // Simple self-checks people can do at home. `conditions` maps condition id -> weight.
 export const TESTS = {
   finkelstein: {
-    view: 'palm', name: 'Finkelstein test', for: 'De Quervain\'s tenosynovitis', regions: ['wristRadial', 'thumbBase', 'forearm'],
+    view: 'palm', name: 'Eichhoff test (home Finkelstein)', for: 'De Quervain\'s tenosynovitis', regions: ['wristRadial', 'thumbBase', 'forearm'],
     how: 'Tuck your thumb into your palm, close your fingers over it, then gently tilt your wrist toward your little finger.',
     positive: 'Sharp pain on the thumb side of the wrist', conditions: { dequervain: 1, intersection: 0.3 },
+    accuracy: 'Often uncomfortable even in healthy wrists, so compare with your other hand. The true Finkelstein test is done by a clinician who moves the wrist for you.',
+    weight: { yes: 2.0, no: 1.0 },
     caution: 'Stop as soon as it hurts — no bouncing.',
   },
   phalen: {
     view: 'thumb', name: 'Phalen\'s test', for: 'Carpal tunnel syndrome', regions: ['wristPalmar', 'thenar', 'fingertip', 'thumbIP'],
     how: 'Let your wrists hang fully bent down, backs of the hands pressed together, for up to 60 seconds.',
     positive: 'Tingling or numbness in the thumb, index or middle finger', conditions: { cts: 1 }, nerveMap: true,
+    accuracy: 'In studies it picks up about 68% of carpal tunnel cases and is correctly negative about 73% of the time — it supports the diagnosis but can\'t confirm or rule it out.',
+    weight: { yes: 1.8, no: 0.6 },
   },
   tinel: {
     view: 'palm', name: 'Tinel\'s sign at the wrist', for: 'Carpal tunnel syndrome', regions: ['wristPalmar', 'thenar', 'fingertip'],
     how: 'Tap firmly 4–6 times with two fingertips over the middle of the palm-side wrist crease.',
     positive: 'An electric tingle shooting into the thumb, index or middle finger', conditions: { cts: 1 }, nerveMap: true,
+    accuracy: 'Picks up only about half of carpal tunnel cases (specificity about 77%), so a negative result doesn\'t rule it out. Normally done by a clinician.',
+    weight: { yes: 1.5, no: 0.4 },
   },
   grind: {
     view: 'palm', name: 'Thumb base grind test', for: 'Basal thumb arthritis', regions: ['thumbBase', 'thenar'],
     how: 'Hold the thumb\'s knuckle with your other hand, gently push the thumb toward its base and rotate it in small circles.',
     positive: 'Deep aching or a grinding feeling at the base of the thumb', conditions: { 'cmc-oa': 1 },
+    accuracy: 'A common clinical sign, but pain can also come from nearby tendons; X-rays confirm arthritis.',
+    weight: { yes: 2.2, no: 0.8 },
   },
   tabletop: {
     view: 'back', name: 'Tabletop test', for: 'Dupuytren\'s disease', regions: ['palmCenter', 'fingerBase'],
     how: 'Place your hand palm-down on a table and try to lay the palm and all the fingers completely flat.',
     positive: 'You can\'t get the palm and fingers flat', conditions: { dupuytren: 1 },
+    accuracy: 'Used to decide when a Dupuytren\'s contracture is worth treating; early nodules can be present with a normal test.',
+    weight: { yes: 2.6, no: 0.8 },
   },
   fistOpen: {
     view: 'thumb', name: 'Fist-and-release', for: 'Trigger finger', regions: ['fingerBase', 'palmCenter', 'thumbIP', 'thumbMCP', 'pip'],
     how: 'Make a firm fist, then open the hand quickly. Repeat five times.',
     positive: 'A finger catches, clicks or locks, with a tender spot at its base', conditions: { trigger: 1 },
+    accuracy: 'Triggering is diagnosed mainly from this history and a tender nodule at the finger base; it may not happen every time.',
+    weight: { yes: 2.6, no: 0.5 },
   },
   cross: {
     view: 'back', name: 'Finger-cross test', for: 'Ulnar nerve weakness', regions: ['hypothenar', 'fingertip', 'wristUlnar'],
     how: 'Cross your middle finger over your index finger, uncross, and repeat quickly. Compare with the other hand.',
     positive: 'Clumsy, weak or unable to cross compared with the other hand', conditions: { 'ulnar-nerve': 1, guyon: 0.8, cubital: 0.8 }, nerveMap: true,
+    accuracy: 'Tests the small hand muscles powered by the ulnar nerve; weakness usually appears later than numbness.',
+    weight: { yes: 1.6, no: 0.6 },
   },
   pressUp: {
     view: 'thumb', name: 'Press-up test', for: 'TFCC tear / ulnar-side wrist pain', regions: ['wristUlnar', 'wristDorsal'],
     how: 'Sitting in a chair with armrests, push yourself up with your hands flat on the armrests.',
     positive: 'Pain on the little-finger side of the wrist', conditions: { tfcc: 1, 'ulnar-impaction': 0.6, extensor: 0.3 },
+    accuracy: 'A simple screening sign for ulnar-sided wrist problems; it can\'t tell a TFCC tear from ulnar impaction — that needs examination and imaging.',
+    weight: { yes: 1.8, no: 0.6 },
   },
   snuffbox: {
     view: 'thumb', name: 'Snuffbox press', for: 'Scaphoid fracture', regions: ['wristRadial', 'thumbBase'],
     how: 'Lift your thumb to show the hollow on the thumb side of the wrist, then press into that hollow with a fingertip.',
     positive: 'Sharp, pinpoint pain — especially after a fall', conditions: { scaphoid: 1 },
+    accuracy: 'Very sensitive but not specific — many sprains are tender here too. That\'s why tenderness after a fall is treated as a possible fracture until imaging says otherwise.',
+    weight: { yes: 2.4, no: 1.0 },
     caution: 'If this hurts after a fall, get an X-ray even if the injury seemed minor.',
   },
 };
+
+// ---------------------------------------------------------------------------
+// Sources. Every link was opened and its title checked on 29 Sep 2026.
+export const CONTENT_REVIEW = {
+  date: '29 Sep 2026',
+  summary: 'Checked against NHS, AAOS OrthoInfo and StatPearls (NCBI Bookshelf) pages. Not yet reviewed by a licensed clinician.',
+  issues: 'https://github.com/TarunT27/hand-pain-explorer/issues',
+};
+
+const NHS = 'https://www.nhs.uk/conditions/';
+const OI = 'https://orthoinfo.aaos.org/en/diseases--conditions/';
+const SP = 'https://www.ncbi.nlm.nih.gov/books/';
+const PMC = 'https://pmc.ncbi.nlm.nih.gov/articles/';
+export const REFS = {
+  'nhs-cts': { org: 'NHS', title: 'Carpal tunnel syndrome', url: NHS + 'carpal-tunnel-syndrome/' },
+  'nhs-trigger': { org: 'NHS', title: 'Trigger finger', url: NHS + 'trigger-finger/' },
+  'nhs-dupuytren': { org: 'NHS', title: 'Dupuytren\'s contracture', url: NHS + 'dupuytrens-contracture/' },
+  'nhs-ganglion': { org: 'NHS', title: 'Ganglion cyst', url: NHS + 'ganglion-cyst/' },
+  'nhs-raynauds': { org: 'NHS', title: 'Raynaud\'s', url: NHS + 'raynauds/' },
+  'nhs-oa': { org: 'NHS', title: 'Osteoarthritis', url: NHS + 'osteoarthritis/' },
+  'nhs-ra': { org: 'NHS', title: 'Rheumatoid arthritis', url: NHS + 'rheumatoid-arthritis/' },
+  'nhs-psa': { org: 'NHS', title: 'Psoriatic arthritis', url: NHS + 'psoriatic-arthritis/' },
+  'nhs-broken-finger': { org: 'NHS', title: 'Broken finger or thumb', url: NHS + 'broken-finger/' },
+  'nhs-cellulitis': { org: 'NHS', title: 'Cellulitis', url: NHS + 'cellulitis/' },
+  'nhs-bites': { org: 'NHS', title: 'Animal and human bites', url: NHS + 'animal-and-human-bites/' },
+  'nhs-sprains': { org: 'NHS', title: 'Sprains and strains', url: NHS + 'sprains-and-strains/' },
+  'nhs-rsi': { org: 'NHS', title: 'Repetitive strain injury', url: NHS + 'repetitive-strain-injury-rsi/' },
+  'nhs-tendonitis': { org: 'NHS', title: 'Tendonitis', url: NHS + 'tendonitis/' },
+  'nhs-mallet': { org: 'NHS', title: 'Mallet finger', url: NHS + 'mallet-finger/' },
+  'nhs-hand-pain': { org: 'NHS', title: 'Hand pain', url: 'https://www.nhs.uk/symptoms/hand-pain/' },
+  'oi-cts': { org: 'OrthoInfo (AAOS)', title: 'Carpal tunnel syndrome', url: OI + 'carpal-tunnel-syndrome/' },
+  'oi-trigger': { org: 'OrthoInfo (AAOS)', title: 'Trigger finger', url: OI + 'trigger-finger/' },
+  'oi-dequervain': { org: 'OrthoInfo (AAOS)', title: 'De Quervain\'s tendinosis', url: OI + 'de-quervains-tendinosis/' },
+  'oi-ganglion': { org: 'OrthoInfo (AAOS)', title: 'Ganglion cyst of the wrist and hand', url: OI + 'ganglion-cyst-of-the-wrist-and-hand/' },
+  'oi-mallet': { org: 'OrthoInfo (AAOS)', title: 'Mallet finger', url: OI + 'mallet-finger-baseball-finger/' },
+  'oi-hand-oa': { org: 'OrthoInfo (AAOS)', title: 'Arthritis of the hand', url: OI + 'arthritis-of-the-hand/' },
+  'oi-wrist-oa': { org: 'OrthoInfo (AAOS)', title: 'Arthritis of the wrist', url: OI + 'arthritis-of-the-wrist/' },
+  'oi-thumb-oa': { org: 'OrthoInfo (AAOS)', title: 'Arthritis of the thumb', url: OI + 'arthritis-of-the-thumb/' },
+  'oi-scaphoid': { org: 'OrthoInfo (AAOS)', title: 'Scaphoid fracture of the wrist', url: OI + 'scaphoid-fracture-of-the-wrist/' },
+  'oi-hand-fx': { org: 'OrthoInfo (AAOS)', title: 'Hand fractures', url: OI + 'hand-fractures/' },
+  'oi-boutonniere': { org: 'OrthoInfo (AAOS)', title: 'Boutonnière deformity', url: OI + 'boutonniere-deformity/' },
+  'oi-ulnar-tunnel': { org: 'OrthoInfo (AAOS)', title: 'Ulnar tunnel syndrome of the wrist', url: OI + 'ulnar-tunnel-syndrome-of-the-wrist/' },
+  'oi-wrist-sprain': { org: 'OrthoInfo (AAOS)', title: 'Wrist sprains', url: OI + 'wrist-sprains/' },
+  'oi-cubital': { org: 'OrthoInfo (AAOS)', title: 'Cubital tunnel syndrome', url: OI + 'ulnar-nerve-entrapment-at-the-elbow/' },
+  'oi-drf': { org: 'OrthoInfo (AAOS)', title: 'Distal radius fractures (broken wrist)', url: OI + 'distal-radius-fractures-broken-wrist/' },
+  'oi-thumb-sprain': { org: 'OrthoInfo (AAOS)', title: 'Sprained thumb (skier\'s thumb)', url: OI + 'sprained-thumb' },
+  'sp-paronychia': { org: 'StatPearls', title: 'Paronychia', url: SP + 'NBK544307/' },
+  'sp-felon': { org: 'StatPearls', title: 'Felon', url: SP + 'NBK430933/' },
+  'sp-jersey': { org: 'StatPearls', title: 'Jersey finger', url: SP + 'NBK545291/' },
+  'sp-hamate': { org: 'StatPearls', title: 'Hamate fractures', url: SP + 'NBK544314/' },
+  'sp-intersection': { org: 'StatPearls', title: 'Intersection syndrome', url: SP + 'NBK430899/' },
+  'sp-tfcc': { org: 'StatPearls', title: 'Triangular fibrocartilage complex', url: SP + 'NBK554564/' },
+  'sp-kienbock': { org: 'StatPearls', title: 'Kienbock disease', url: SP + 'NBK536991/' },
+  'sp-carpal-instability': { org: 'StatPearls', title: 'Carpal ligament instability', url: SP + 'NBK557729/' },
+  'sp-pft': { org: 'StatPearls', title: 'Pyogenic flexor tenosynovitis', url: SP + 'NBK576414/' },
+  'sp-dequervain': { org: 'StatPearls', title: 'De Quervain tenosynovitis', url: SP + 'NBK442005/' },
+  'sp-dupuytren': { org: 'StatPearls', title: 'Dupuytren contracture', url: SP + 'NBK526074/' },
+  'sp-guyon': { org: 'StatPearls', title: 'Guyon canal syndrome', url: SP + 'NBK431063/' },
+  'sp-ulnar': { org: 'StatPearls', title: 'Ulnar nerve entrapment', url: SP + 'NBK555929/' },
+  'sp-wartenberg': { org: 'StatPearls', title: 'Cheiralgia paresthetica (Wartenberg syndrome)', url: SP + 'NBK545200/' },
+  'sp-finger-disloc': { org: 'StatPearls', title: 'Finger dislocation', url: SP + 'NBK551508/' },
+  'sp-phalanx': { org: 'StatPearls', title: 'Phalanx fractures of the hand', url: SP + 'NBK557625/' },
+  'sp-cutaneous': { org: 'StatPearls', title: 'Hand cutaneous innervation', url: SP + 'NBK544247/' },
+  'sp-scaphoid': { org: 'StatPearls', title: 'Scaphoid wrist fracture', url: SP + 'NBK536907/' },
+  'sp-cts': { org: 'StatPearls', title: 'Carpal tunnel syndrome', url: SP + 'NBK448179/' },
+  'sp-trigger': { org: 'StatPearls', title: 'Trigger finger', url: SP + 'NBK459310/' },
+  'sp-raynaud': { org: 'StatPearls', title: 'Raynaud disease', url: SP + 'NBK499833/' },
+  'sp-radiculopathy': { org: 'StatPearls', title: 'Cervical radiculopathy', url: SP + 'NBK441828/' },
+  'pmc-glomus': { org: 'PubMed Central', title: 'Glomus tumor: revitalizing concepts', url: PMC + 'PMC4567371/' },
+  'pmc-carpal-boss': { org: 'PubMed Central', title: 'Diagnosis and treatment of symptomatic carpal bossing', url: PMC + 'PMC4625297/' },
+  'pmc-ulnar-impaction': { org: 'PubMed Central', title: 'Ulnocarpal impaction syndrome', url: PMC + 'PMC11781849/' },
+  'pmc-epl': { org: 'PubMed Central', title: 'Spontaneous atraumatic extensor pollicis longus rupture', url: PMC + 'PMC3587012/' },
+  'pmc-ecu': { org: 'PubMed Central', title: 'Sports-related extensor carpi ulnaris pathology', url: PMC + 'PMC3812850/' },
+  'pmc-sagittal': { org: 'PubMed Central', title: 'Sagittal band, boutonniere, and pulley injuries in the athlete', url: PMC + 'PMC5344850/' },
+  'pmc-hammer': { org: 'PubMed Central', title: 'Hypothenar hammer syndrome: case report and literature review', url: PMC + 'PMC6565917/' },
+};
+
+export const CONDITION_SOURCES = {
+  paronychia: ['sp-paronychia'], felon: ['sp-felon'], glomus: ['pmc-glomus'],
+  fracture: ['nhs-broken-finger', 'oi-hand-fx', 'sp-phalanx'],
+  cts: ['nhs-cts', 'oi-cts', 'sp-cts'], 'ulnar-nerve': ['oi-cubital', 'sp-ulnar'],
+  raynaud: ['nhs-raynauds', 'sp-raynaud'], oa: ['nhs-oa', 'oi-hand-oa'],
+  mallet: ['nhs-mallet', 'oi-mallet'], jersey: ['sp-jersey'], ganglion: ['nhs-ganglion', 'oi-ganglion'],
+  psa: ['nhs-psa'], sprain: ['nhs-sprains', 'sp-finger-disloc'], ra: ['nhs-ra'], boutonniere: ['oi-boutonniere'],
+  trigger: ['nhs-trigger', 'oi-trigger', 'sp-trigger'], overuse: ['nhs-rsi', 'nhs-tendonitis'],
+  dupuytren: ['nhs-dupuytren', 'sp-dupuytren'], 'sheath-infection': ['sp-pft'], sagittal: ['pmc-sagittal'],
+  'fight-bite': ['nhs-bites'], 'skiers-thumb': ['oi-thumb-sprain'], 'cmc-oa': ['oi-thumb-oa'],
+  dequervain: ['oi-dequervain', 'sp-dequervain'], scaphoid: ['oi-scaphoid', 'sp-scaphoid'], contusion: ['nhs-hand-pain'],
+  guyon: ['oi-ulnar-tunnel', 'sp-guyon'], hamate: ['sp-hamate'], hammer: ['pmc-hammer'], pisiform: ['oi-wrist-oa'],
+  cubital: ['oi-cubital', 'sp-ulnar'], extensor: ['nhs-tendonitis'], 'carpal-boss': ['pmc-carpal-boss'],
+  cellulitis: ['nhs-cellulitis'], fcr: ['nhs-tendonitis'], 'wrist-fracture': ['oi-drf', 'oi-wrist-sprain'],
+  intersection: ['sp-intersection'], wartenberg: ['sp-wartenberg'], 'wrist-oa': ['oi-wrist-oa'], tfcc: ['sp-tfcc'],
+  ecu: ['pmc-ecu'], 'ulnar-impaction': ['pmc-ulnar-impaction'], 'sl-injury': ['sp-carpal-instability'],
+  kienbock: ['sp-kienbock'], 'epl-rupture': ['pmc-epl'], 'nerve-referred': ['sp-radiculopathy'],
+};
+export const TEST_SOURCES = {
+  finkelstein: ['sp-dequervain'], phalen: ['sp-cts'], tinel: ['sp-cts'], grind: ['oi-thumb-oa'], tabletop: ['sp-dupuytren'],
+  fistOpen: ['sp-trigger'], cross: ['sp-ulnar'], pressUp: ['sp-tfcc'], snuffbox: ['sp-scaphoid', 'oi-scaphoid'],
+};
+export const NERVE_SOURCES = ['sp-cutaneous'];

@@ -208,6 +208,9 @@ export function makeMaterial(kind) {
     case 'nerve':
       m = new THREE.MeshPhysicalMaterial({ color: 0xf2c53d, roughness: 0.35, metalness: 0, emissive: 0x3a2800, clearcoat: 0.4, map: t.tendon });
       m.userData.layerKey = 'nerves'; break;
+    case 'vein':
+      m = new THREE.MeshPhysicalMaterial({ color: 0x3f5fc8, roughness: 0.32, metalness: 0, clearcoat: 0.5, clearcoatRoughness: 0.25, emissive: 0x05081a });
+      m.userData.layerKey = 'nerves'; break;
     case 'artery':
       m = new THREE.MeshPhysicalMaterial({ color: 0xd8333b, roughness: 0.3, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.2, emissive: 0x220000 });
       m.userData.layerKey = 'nerves'; break;
