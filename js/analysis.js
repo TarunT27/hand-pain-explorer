@@ -1,6 +1,6 @@
 // Combines pain-map spots, symptoms, nerve territories and self-test answers
 // into a ranked list of conditions that might fit. Educational only.
-import { REGIONS, CONDITIONS, TESTS, SYMPTOMS, NERVES } from './content.js';
+import { REGIONS, CONDITIONS, TESTS, SYMPTOMS, NERVES, REFS, CONDITION_SOURCES } from './content.js';
 import { FINGERS } from './rig.js';
 
 const symLabel = Object.fromEntries(SYMPTOMS.map((s) => [s.key, s.label.toLowerCase()]));
@@ -18,7 +18,10 @@ export function conditionInfo(id) {
     first = R.causes.find((k) => k.id === id);
     if (first) break;
   }
-  return { id, name: c.name || (first && first.name) || id, helps: c.helps || (first && first.helps) || '', desc: (first && first.desc) || '', nerve: c.nerve || null, urgent: !!c.urgent };
+  return {
+    id, name: c.name || (first && first.name) || id, helps: c.helps || (first && first.helps) || '', desc: (first && first.desc) || '',
+    nerve: c.nerve || null, urgent: !!c.urgent, note: c.note || '', sources: (CONDITION_SOURCES[id] || []).map((k) => REFS[k]).filter(Boolean),
+  };
 }
 
 export function testsFor(id) {
@@ -49,10 +52,15 @@ export function analyze(pins, tests) {
   });
   // Numbness pattern: which nerve's skin area do the numb spots fall in?
   const numb = pins.filter((p) => p.symptoms.includes('numb') && p.territory);
+  // The palm's own skin branch of the median nerve bypasses the carpal tunnel,
+  // so numbness in the palm points away from carpal tunnel syndrome.
+  const PALM = ['palmCenter', 'thenar'];
+  const numbPalm = numb.filter((p) => PALM.includes(p.region) && p.territory === 'median');
   if (numb.length) {
     for (const [id, c] of Object.entries(CONDITIONS)) {
       if (!c.nerve) continue;
-      const inside = numb.filter((p) => p.territory === c.nerve).length;
+      const counts = id === 'cts' ? numb.filter((p) => !numbPalm.includes(p)) : numb;
+      const inside = counts.filter((p) => p.territory === c.nerve).length;
       const outside = numb.length - inside;
       if (inside) {
         const e = entry(id);
@@ -61,18 +69,25 @@ export function analyze(pins, tests) {
       }
       if (outside && scores.has(id)) scores.get(id).score -= 0.5 * outside;
     }
+    if (numbPalm.length && scores.has('cts')) {
+      const e = scores.get('cts');
+      e.score -= 0.6 * numbPalm.length;
+      why(e, 'Numb palm skin is usually spared in carpal tunnel syndrome', 3.2);
+    }
   }
   for (const [k, ans] of Object.entries(tests)) {
     const T = TESTS[k];
     if (!T) continue;
+    // each self-check carries its own weight, reflecting how informative it is
+    const tw = T.weight || { yes: 2.0, no: 0.8 };
     for (const [id, wt] of Object.entries(T.conditions)) {
       if (ans === 'yes') {
         const e = entry(id);
-        e.score += 2.6 * wt;
+        e.score += tw.yes * wt;
         why(e, `${T.name} reproduced your symptoms`, 4);
       } else if (ans === 'no' && scores.has(id)) {
         const e = scores.get(id);
-        e.score -= 1.4 * wt;
+        e.score -= tw.no * wt;
         why(e, `${T.name} was negative`, 3.5);
       }
     }

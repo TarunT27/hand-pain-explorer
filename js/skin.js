@@ -29,7 +29,7 @@ function segmentSpecs() {
   seg(['T2', -0.35, 0.3, 0.0], ['wrist', 2.35, 8.1, 0.15], 0.62, 0.6, 0.9, 3);
   // thumb
   seg(['T2', 0, 0, 0.05], ['T2', 0, THUMB.len[1], 0.06], 0.92, 0.84, 0.6, 4);
-  seg(['T3', 0, 0, 0.08], ['T3', 0, THUMB.len[2] + 0.05, 0.12], 0.84, 0.7, 0.35, 4);
+  seg(['T3', 0, 0, 0.08], ['T3', 0, THUMB.len[2] + 0.05, 0.12], 0.84, 0.7, 0.35, 4.2);
   // fingers
   FINGERS.forEach((d, f) => {
     const s = d.skin, c = d.code, L = d.len;
@@ -60,7 +60,7 @@ uniform vec3 uNailC[5]; uniform vec3 uNailY[5]; uniform vec3 uNailX[5]; uniform 
 uniform vec3 uPalmN; uniform vec3 uSkin; uniform vec3 uKeyDir; uniform vec3 uFillDir;
 uniform float uQ; uniform float uGhost; uniform mat4 uViewProj;
 uniform vec3 uSegX[NSEG]; uniform vec3 uSegZ[NSEG]; uniform float uSegT[NSEG];
-uniform vec3 uWristO; uniform vec3 uWristX; uniform float uNerveMap;
+uniform vec3 uWristO; uniform vec3 uWristX; uniform float uNerveMap; uniform mat4 uWristInv;
 uniform vec4 uPins[8]; uniform int uPinCount;
 uniform mat4 uRootInv; uniform float uTime; uniform vec4 uHot; uniform vec3 uHot2; uniform float uHotAmt; uniform vec4 uHover;
 varying vec3 vWorld;
@@ -97,13 +97,16 @@ vec3 calcNormal(vec3 p) {
 
 // Sensory nerve territory at a skin point: 0 none, 1 median, 2 ulnar, 3 radial.
 // Mirrors Skin.territoryAt() in JS.
-int territory(vec3 p, vec3 N) {
+int nearestSeg(vec3 p) {
   float best = 1e5; int bi = 0;
   for (int i = 0; i < NSEG; i++) {
     if (i >= uCount) break;
     float d = sdRoundCone(p, uA[i].xyz, uB[i].xyz, uA[i].w, uB[i].w);
     if (d < best) { best = d; bi = i; }
   }
+  return bi;
+}
+int territory(vec3 p, vec3 N, int bi) {
   float t = uSegT[bi];
   bool palmar = dot(N, uSegZ[bi]) > 0.0;
   float lat = dot(p - uA[bi].xyz, uSegX[bi]);
@@ -118,6 +121,61 @@ int territory(vec3 p, vec3 N) {
   if (f == 2 && lat < 0.0) return 2;
   if (palmar) return 1;
   return s == 0 ? 3 : 1;
+}
+
+float ln(float d, float w) { return exp(-(d * d) / (w * w)); }
+
+// Surface detail from anatomy: x = flexion crease, y = knuckle wrinkle, z = vein, w = tint (+ fingertip pad, - knuckle)
+vec4 skinDetail(vec3 p, vec3 N, int bi) {
+  float t = uSegT[bi];
+  vec3 A = uA[bi].xyz;
+  vec3 ax = uB[bi].xyz - A; float len = length(ax); ax /= max(len, 1e-4);
+  float along = dot(p - A, ax);
+  float lat = dot(p - A, uSegX[bi]);
+  float pal = dot(N, uSegZ[bi]);
+  float palmar = smoothstep(0.05, 0.55, pal), dorsal = smoothstep(0.05, 0.55, -pal);
+  float crease = 0.0, wrinkle = 0.0, vein = 0.0, tint = 0.0;
+  if (t > 3.5) {
+    // fingers (types 10+) and thumb (4.0 proximal, 4.2 distal); s = which phalanx
+    int s;
+    if (t < 9.5) s = t > 4.1 ? 2 : 1;
+    else { int fi = int(t + 0.5) - 10; s = fi - (fi / 3) * 3; }
+    float side = 1.0 - smoothstep(0.45, 0.95, abs(lat) / max(uA[bi].w, 0.3));
+    if (s == 0) crease += ln(along - 1.25, 0.05) * 0.85 + ln(along - 1.45, 0.04) * 0.45;
+    if (s == 0) crease += ln(along - len + 0.02, 0.04) + ln(along - len + 0.16, 0.035) * 0.8;
+    if (s == 1) crease += ln(along + 0.02, 0.04) + ln(along - 0.12, 0.035) * 0.8 + ln(along - len + 0.02, 0.04) * 0.9;
+    if (s == 2) crease += ln(along - 0.03, 0.04) * 0.9;
+    crease *= palmar * side;
+    float c = lat * lat * 1.1;
+    float wr = 0.0;
+    if (s == 1) wr += ln(along + c - 0.02, 0.028) + ln(along + c - 0.14, 0.026) * 0.8 + ln(along + c + 0.1, 0.026) * 0.8 + ln(along + c + 0.22, 0.024) * 0.5;
+    if (s == 0) wr += ln(along - len + c - 0.02, 0.028) + ln(along - len + c + 0.12, 0.026) * 0.7;
+    if (s == 2) wr += (ln(along + c - 0.02, 0.026) + ln(along + c - 0.12, 0.024) * 0.7) * 0.7;
+    if (s == 1) wr += ln(along - len + c - 0.02, 0.026) * 0.5;
+    wrinkle = wr * dorsal * side;
+    tint = s == 2 ? palmar * 0.8 : 0.0;
+    tint -= dorsal * (ln(along, 0.35) + ln(along - len, 0.35)) * (s == 2 ? 0.25 : 0.5);
+  } else {
+    // palm, wrist and forearm, in wrist-frame centimetres
+    vec3 w = (uWristInv * vec4(p, 1.0)).xyz;
+    vec3 wn = normalize((uWristInv * vec4(N, 0.0)).xyz);
+    float palmS = smoothstep(0.15, 0.5, wn.z), backS = smoothstep(0.15, 0.5, -wn.z);
+    float x = w.x, y = w.y;
+    crease += ln(y - (7.3 + 0.2 * (x + 3.1) + 0.12 * sin(x * 1.3)), 0.055) * smoothstep(-3.4, -3.0, x) * (1.0 - smoothstep(1.2, 1.6, x));
+    crease += ln(y - (5.75 + 0.2 * (x + 1.8) - 0.1 * sin(x * 1.1)), 0.055) * smoothstep(-2.1, -1.7, x) * (1.0 - smoothstep(2.9, 3.3, x));
+    float ty = clamp((y - 1.7) / 5.0, 0.0, 1.0);
+    crease += ln(x - (1.2 + 1.7 * pow(sin(ty * 1.5708), 0.85)), 0.06) * smoothstep(1.7, 2.2, y) * (1.0 - smoothstep(6.4, 6.8, y));
+    crease += (ln(y - 0.45, 0.05) + ln(y + 0.35, 0.05) * 0.7) * smoothstep(-2.6, -2.2, x) * (1.0 - smoothstep(2.4, 2.8, x));
+    crease *= palmS;
+    float v = 0.0;
+    v += ln(x - (2.05 + 0.25 * (7.0 - y) / 7.0 + 0.16 * sin(y * 1.3)), 0.11) * smoothstep(-6.0, -4.0, y) * (1.0 - smoothstep(6.6, 7.2, y));
+    v += ln(x - (0.45 + 0.15 * sin(y * 1.1 + 1.0)), 0.1) * smoothstep(0.8, 1.6, y) * (1.0 - smoothstep(6.6, 7.1, y));
+    v += ln(x - (-1.85 + 0.2 * sin(y * 0.9 + 2.0)), 0.11) * smoothstep(-6.0, -4.0, y) * (1.0 - smoothstep(6.3, 6.9, y));
+    v += ln(y - (6.9 + 0.3 * sin(x * 0.8)), 0.1) * smoothstep(-2.6, -2.0, x) * (1.0 - smoothstep(2.1, 2.6, x));
+    vein = min(v, 1.0) * backS;
+    tint -= backS * smoothstep(7.7, 8.8, y) * 0.35;
+  }
+  return vec4(crease, wrinkle, vein, tint);
 }
 
 float calcAO(vec3 p, vec3 n) {
@@ -162,27 +220,44 @@ void main() {
     alpha = (0.03 + fres * 0.42) * 0.6;
   } else {
     vec3 base = uSkin;
+    int bi = nearestSeg(p);
+    vec4 det = skinDetail(p, N, bi);
     float palm = clamp(dot(N, uPalmN), 0.0, 1.0);
     base = mix(base, base * vec3(1.1, 0.95, 0.93) + vec3(0.025, 0.004, 0.0), palm * 0.55);
-    float nail = 0.0;
+    float nail = 0.0; vec2 nl = vec2(0.0);
     for (int i = 0; i < 5; i++) {
       vec3 d = p - uNailC[i];
-      float m = 1.0 - smoothstep(0.72, 1.0, length(vec2(dot(d, uNailX[i]), dot(d, uNailY[i]))));
+      vec2 q = vec2(dot(d, uNailX[i]), dot(d, uNailY[i]));
+      float m = 1.0 - smoothstep(0.72, 1.0, length(q));
       m *= smoothstep(0.25, 0.6, dot(N, uNailD[i]));
-      nail = max(nail, m);
+      if (m > nail) { nail = m; nl = q; }
     }
-    base = mix(base, vec3(0.78, 0.55, 0.52), nail * 0.8);
+    // fine skin texture (bump) everywhere except nails
+    vec3 tp = lp * 9.0;
+    float n0 = hpNoise(tp);
+    vec3 gn = vec3(hpNoise(tp + vec3(0.08, 0.0, 0.0)), hpNoise(tp + vec3(0.0, 0.08, 0.0)), hpNoise(tp + vec3(0.0, 0.0, 0.08))) - n0;
+    N = normalize(N + gn * 0.28 * (1.0 - nail));
+    float cr = clamp(det.x, 0.0, 1.0), wr = clamp(det.y, 0.0, 1.0);
+    base = mix(base, base * vec3(0.74, 0.58, 0.56), cr * 0.42);
+    base = mix(base, base * vec3(0.84, 0.7, 0.68), wr * 0.38);
+    base = mix(base, base * vec3(0.7, 0.8, 1.08), det.z * 0.36);
+    base = mix(base, base * vec3(1.05, 0.88, 0.88) + vec3(0.02, 0.0, 0.0), max(det.w, 0.0) * 0.3);
+    base = mix(base, base * vec3(0.9, 0.79, 0.77), max(-det.w, 0.0) * 0.4);
+    vec3 nailCol = vec3(0.8, 0.56, 0.53);
+    nailCol = mix(nailCol, vec3(0.93, 0.84, 0.8), smoothstep(-0.42, -0.68, nl.y) * (1.0 - smoothstep(0.5, 0.78, abs(nl.x))));
+    nailCol = mix(nailCol, vec3(0.96, 0.93, 0.88), smoothstep(0.7, 0.9, nl.y));
+    base = mix(base, nailCol, nail * 0.85);
     float wrap = clamp((dot(N, uKeyDir) + 0.3) / 1.3, 0.0, 1.0);
     float wrap2 = clamp((dot(N, uFillDir) + 0.5) / 1.5, 0.0, 1.0);
     vec3 H = normalize(uKeyDir + V);
-    float spec = pow(max(dot(N, H), 0.0), mix(24.0, 110.0, nail)) * mix(0.1, 0.7, nail);
+    float spec = pow(max(dot(N, H), 0.0), mix(24.0, 110.0, nail)) * mix(0.1, 0.7, nail) * (1.0 - 0.7 * cr) * (1.0 + 0.6 * det.z);
     vec3 sss = vec3(0.85, 0.22, 0.12) * (1.0 - abs(dot(N, uKeyDir))) * 0.1 + vec3(0.55, 0.12, 0.06) * fres * 0.2;
     float ao = calcAO(p, N);
     float aoS = mix(0.35, 1.0, ao);
     col = (base * (0.2 + 0.95 * wrap) + base * vec3(0.5, 0.62, 0.9) * 0.28 * wrap2) * aoS + sss * mix(0.6, 1.0, ao) + spec * ao + vec3(0.65, 0.78, 1.0) * fres * 0.16 * ao;
     col = mix(col, col * vec3(0.93, 0.78, 0.74), (1.0 - ao) * 0.5);
     if (uNerveMap > 0.01) {
-      int tr = territory(p, N);
+      int tr = territory(p, N, bi);
       if (tr > 0) {
         vec3 nc = tr == 1 ? vec3(0.95, 0.52, 0.06) : tr == 2 ? vec3(0.42, 0.28, 0.95) : vec3(0.04, 0.62, 0.52);
         col = mix(col, nc * (0.35 + 0.8 * wrap) * aoS + spec, 0.62 * uNerveMap);
@@ -267,7 +342,7 @@ export class Skin {
       uFillDir: { value: new THREE.Vector3(-0.7, 0.1, -0.7).normalize() },
       uQ: layerQ[0], uGhost: { value: 1 }, uViewProj: { value: new THREE.Matrix4() },
       uSegX: { value: vec3s(NSEG) }, uSegZ: { value: vec3s(NSEG) }, uSegT: { value: new Array(NSEG).fill(0) },
-      uWristO: { value: new THREE.Vector3() }, uWristX: { value: new THREE.Vector3(1, 0, 0) }, uNerveMap: { value: 0 },
+      uWristO: { value: new THREE.Vector3() }, uWristX: { value: new THREE.Vector3(1, 0, 0) }, uNerveMap: { value: 0 }, uWristInv: { value: new THREE.Matrix4() },
       uPins: G.uPins, uPinCount: G.uPinCount,
       uRootInv: G.uRootInv, uTime: G.uTime, uHot: G.uHot, uHot2: G.uHot2, uHotAmt: G.uHotAmt, uHover: G.uHover,
     };
@@ -330,6 +405,7 @@ export class Skin {
     u.uPalmN.value.setFromMatrixColumn(this.rig.wrist.matrixWorld, 2).normalize();
     u.uWristO.value.setFromMatrixPosition(this.rig.wrist.matrixWorld);
     u.uWristX.value.setFromMatrixColumn(this.rig.wrist.matrixWorld, 0).normalize();
+    u.uWristInv.value.copy(this.rig.wrist.matrixWorld).invert();
   }
 
   map(p) {
@@ -378,7 +454,7 @@ export class Skin {
     if (t === 0) return null;
     if (t === 1) return name[wx > -0.95 ? (palmar ? 1 : 3) : 2];
     if (t === 2) return 'ulnar';
-    if (t <= 4) return palmar ? 'median' : 'radial';
+    if (t < 4.5) return palmar ? 'median' : 'radial';
     const fi = t - 10, f = Math.floor(fi / 3), sg = fi - f * 3;
     if (f === 3) return 'ulnar';
     if (f === 2 && lat < 0) return 'ulnar';

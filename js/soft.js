@@ -193,6 +193,25 @@ export function buildSoftTissues(rig) {
           [c + '1', side * 0.56 * d.skin, L[0] * 0.5, 0.22], [c + '2', side * 0.52 * d.skin, L[1] * 0.5, 0.18], [c + '3', side * 0.42 * d.skin, L[2] * 0.7, 0.05]],
       });
     }
+    // --- Extensor hood: sagittal bands wrap the knuckle and hold the tendon centred; lateral bands run to the fingertip
+    add({
+      name: `Sagittal bands (extensor hood) — ${label.toLowerCase()}`, desc: 'Bands that wrap the knuckle and keep the extensor tendon centred. Torn in "boxer\'s knuckle".',
+      tag: 'sagittal', finger: d.key, kind: 'ligament', r: 0.045, rw: 7, profile: 'const', seg: 12, radial: 8,
+      pts: [[c + '1', -0.56 * d.skin, 0.3, 0.3], [c + '1', -0.54 * d.skin, 0.34, -0.2], [c + '1', 0, 0.36, -0.56 * d.skin], [c + '1', 0.54 * d.skin, 0.34, -0.2], [c + '1', 0.56 * d.skin, 0.3, 0.3]],
+    });
+    for (const side of [1, -1]) {
+      add({
+        name: `Lateral band — ${label.toLowerCase()}`, desc: 'Part of the extensor mechanism that straightens the end joint. Slips out of place in boutonnière and swan-neck deformities.',
+        tag: 'edc', finger: d.key, kind: 'tendon', r: 0.045, rw: 1.6, profile: 'tendon', seg: 16, radial: 6, approxLen: 8,
+        pts: [[c + '1', side * 0.42, 0.9, -0.2], [c + '1', side * 0.44, L[0] * 0.7, -0.32], [c + '2', side * 0.36, 0.2, -0.36], [c + '2', side * 0.2, L[1] * 0.75, -0.36], [c + '3', 0, 0.12, -0.38]],
+      });
+    }
+    // --- Volar plate of the middle knuckle
+    add({
+      name: `Volar plate (PIP) — ${label.toLowerCase()}`, desc: 'Thick plate on the palm side of the middle knuckle that stops it bending backwards. Injured in "jammed" fingers.',
+      tag: 'volar-plate', finger: d.key, kind: 'ligament', r: 0.06, rw: 3.6, profile: 'band', seg: 8, radial: 8,
+      pts: [[c + '1', 0, L[0] - 0.45, 0.4], [c + '1', 0, L[0] - 0.05, 0.46], [c + '2', 0, 0.3, 0.4]],
+    });
     // --- Lumbrical
     add({
       name: `Lumbrical — ${label.toLowerCase()}`, desc: 'Small worm-like muscle from the flexor tendon to the extensor hood; bends the knuckle while straightening the finger.',
@@ -315,6 +334,22 @@ export function buildSoftTissues(rig) {
     pts: [W(2.55, 1.2, -0.45), ['T1', 0.2, 1.8, -0.6], ['T1', 0.1, 3.9, -0.62], ['T2', 0.1, 1.2, -0.52]] });
   add({ name: 'Dorsal branch of the ulnar nerve', desc: 'Sensation on the back of the little-finger side of the hand.', tag: 'ulnar-nerve', kind: 'nerve', r: 0.07, profile: 'nerve', approxLen: 10,
     pts: [F(-1.8, -5, 0.2), F(-2.35, -2, -0.35), W(-2.15, 2.0, -0.55), W(-2.2, 5.5, -0.6)] });
+
+  // ---------------- Veins on the back of the hand ----------------
+  const veinDesc = 'Part of the dorsal venous network — the veins you can see on the back of your hand.';
+  add({ name: 'Cephalic vein (start)', desc: 'Begins on the thumb side of the back of the hand and runs up the forearm. ' + veinDesc, tag: 'veins', kind: 'vein', r: 0.13, profile: 'nerve', approxLen: 16,
+    pts: [W(1.9, 7.0, -0.54), W(2.2, 4.5, -0.56), W(2.35, 1.5, -0.48), F(2.3, -1.5, -0.56), F(2.0, -6, -0.76), F(1.8, -12.5, -0.91)] });
+  add({ name: 'Basilic vein (start)', desc: 'Begins on the little-finger side of the back of the hand. ' + veinDesc, tag: 'veins', kind: 'vein', r: 0.13, profile: 'nerve', approxLen: 16,
+    pts: [W(-2.0, 6.8, -0.48), W(-2.0, 4.0, -0.51), W(-2.2, 1.3, -0.41), F(-2.3, -1.5, -0.41), F(-2.2, -6, -0.66), F(-2.0, -12.5, -0.81)] });
+  add({ name: 'Dorsal venous arch', desc: veinDesc, tag: 'veins', kind: 'vein', r: 0.1, profile: 'const', approxLen: 6, seg: 16,
+    pts: [W(-2.3, 6.3, -0.48), W(-1.0, 7.0, -0.56), W(0.4, 7.2, -0.58), W(1.6, 7.0, -0.56), W(2.3, 6.4, -0.52)] });
+  add({ name: 'Dorsal metacarpal vein', desc: veinDesc, tag: 'veins', kind: 'vein', r: 0.08, profile: 'nerve', approxLen: 8,
+    pts: [W(0.45, 7.3, -0.58), W(0.5, 5.0, -0.58), W(0.8, 2.6, -0.56), W(1.8, 0.8, -0.52)] });
+  FINGERS.forEach((d) => {
+    const M = d.mcp;
+    add({ name: `Dorsal digital vein — ${d.label.toLowerCase()}`, desc: veinDesc, tag: 'veins', finger: d.key, kind: 'vein', r: 0.055, profile: 'nerve', approxLen: 5,
+      pts: [[d.code + '1', 0.28 * d.skin, d.len[0] * 0.8, -0.42 * d.skin], [d.code + '1', 0.3 * d.skin, 0.5, -0.5 * d.skin], W(M.x + 0.3, M.y - 1.2, M.z - 0.62), W(M.x * 0.8, 7.0, M.z - 0.6)] });
+  });
 
   // ---------------- Arteries ----------------
   add({ name: 'Radial artery', desc: 'Where you feel the pulse at the wrist. Dives through the anatomical snuffbox.', tag: 'radial-artery', kind: 'artery', r: 0.14, profile: 'nerve', approxLen: 20,
