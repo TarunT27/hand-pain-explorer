@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About the evidence — Hand Pain Explorer</title>
+  <meta name="description" content="How Hand Pain Explorer ranks conditions, where its medical content comes from, who has reviewed it, and what data leaves your device (none, apart from loading the page).">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { overflow: auto; }
+    .about { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; color: var(--text); }
+    .about h1 { font-family: var(--serif); font-size: 34px; margin: 0 0 6px; }
+    .about h2 { font-family: var(--serif); font-size: 22px; margin: 36px 0 10px; }
+    .about p, .about li { font-size: 15px; line-height: 1.6; color: #d4dde7; }
+    .about a { color: var(--blue); }
+    .about table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    .about th, .about td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .about th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .about code { font: 13px ui-monospace, Menlo, monospace; background: rgba(255,255,255,.07); padding: 1px 5px; border-radius: 5px; }
+    .about .back { display: inline-block; margin-bottom: 18px; }
+    .about .note { padding: 12px 14px; border-radius: 12px; background: rgba(255,106,85,.08); border: 1px solid rgba(255,106,85,.3); }
+    #sources ul { columns: 2; column-gap: 28px; padding-left: 18px; }
+    @media (max-width: 700px) { #sources ul { columns: 1; } }
+  </style>
+</head>
+<body>
+  <main class="about">
+    <a class="back" href="./">← Back to the explorer</a>
+    <h1>About the evidence</h1>
+    <p>Hand Pain Explorer is an educational tool. It shows what lies under the skin where your hand hurts, what commonly causes pain there, and what usually helps. It is <b>not</b> a diagnosis and it cannot examine you.</p>
+    <div class="note"><b>Review status:</b> <span id="reviewDate"></span>. The content was checked against the published sources listed below. <b>It has not yet been reviewed by a licensed clinician.</b> If you are one and can help, see <a href="https://github.com/TarunT27/hand-pain-explorer/blob/main/REVIEWERS.md">REVIEWERS.md</a>.</div>
+
+    <h2>What it does and doesn't claim</h2>
+    <ul>
+      <li>It explains anatomy and lists <b>common</b> causes of pain in 17 areas of the hand, wrist and forearm, with plain-language tips and warning signs.</li>
+      <li>"What might fit" <b>ranks</b> those common causes by how well they match what you entered. It does not calculate probabilities and it has not been validated on real patients.</li>
+      <li>It cannot detect anything it hasn't been told, cannot feel, see or image your hand, and does not know your history or medications.</li>
+    </ul>
+
+    <h2>How the ranking works</h2>
+    <p>Each saved spot contributes to every condition listed for that area. The score is a sum of simple weights, all of which live in <code>js/content.js</code> and <code>js/analysis.js</code> where a reviewer can read and change them:</p>
+    <table>
+      <tr><th>Input</th><th>Effect</th></tr>
+      <tr><td>A spot in an area</td><td>Each cause listed for that area gets a base score, scaled by pain (0.35 at 0/10 to 1.0 at 10/10) and ×1.4 if the cause is marked common there.</td></tr>
+      <tr><td>A symptom that matches a cause's tags</td><td>+0.9 per match (×pain scale). "Red, hot or fever", "Cut, bite or puncture" and "Can't bend or straighten it" count double, because they separate emergencies from sprains.</td></tr>
+      <tr><td>Numbness</td><td>Each numb spot is matched to the skin nerve that supplies it (median, ulnar or radial, drawn by the nerve map). +1.4 per spot inside a condition's nerve area; −0.5 per spot outside it. Numb palm skin counts against carpal tunnel syndrome because that skin branch bypasses the tunnel. Numbness on the back of the hand favours the elbow over the wrist for the ulnar nerve. Numbness across two or more nerve areas raises "nerve irritation from the neck or a general nerve problem".</td></tr>
+      <tr><td>How long</td><td>Hours–days: +0.6 to injury-type causes, −0.5 to wear-and-tear causes. Months: the reverse.</td></tr>
+      <tr><td>Both hands</td><td>+0.7 to conditions that affect the whole body (rheumatoid and psoriatic arthritis, osteoarthritis, Raynaud's, carpal tunnel, Dupuytren's, basal thumb arthritis).</td></tr>
+      <tr><td>Self-checks</td><td>Each test has its own weight reflecting how informative it is (for example Phalen's +1.8 for yes, −0.6 for no; Tinel's +1.5 / −0.4). The reliability note on each card quotes the published sensitivity and specificity where known.</td></tr>
+      <tr><td>Several spots</td><td>+0.6 for each extra spot a condition explains.</td></tr>
+    </table>
+    <p>The label on each result depends on <b>how much evidence</b> there is, not only on rank. With a location and nothing else, every cause is "Common here". "Most consistent" needs at least two independent pieces of evidence. Urgent conditions whose key symptom you ticked are shown in a separate "Don't miss" list regardless of rank, and the red-flag checklist comes before any ranking.</p>
+
+    <h2>Who checked it</h2>
+    <p>The content was written and then checked, condition by condition, against the sources below by the author with AI assistance. Every link was opened and its title confirmed. The full method, the corrections it produced and the known limitations are in <a href="https://github.com/TarunT27/hand-pain-explorer/blob/main/CONTENT_REVIEW.md">CONTENT_REVIEW.md</a>. Reported corrections are tracked as <a href="https://github.com/TarunT27/hand-pain-explorer/issues">GitHub issues</a>.</p>
+
+    <h2 id="sources">Sources</h2>
+    <p>Patient information from the <b>NHS</b> and the <b>American Academy of Orthopaedic Surgeons (OrthoInfo)</b>, clinical summaries from <b>StatPearls</b> (NCBI Bookshelf) and a few <b>PubMed Central</b> reviews. The app paraphrases these sources in plain language; it does not reproduce their text. NHS content is published under the Open Government Licence; StatPearls chapters are published under a Creative Commons Attribution licence; OrthoInfo and PMC articles are cited as references only.</p>
+    <div id="sourceList"></div>
+
+    <h2>Privacy</h2>
+    <ul>
+      <li>Your pain map, answers and settings are stored only in your browser (<code>localStorage</code>). Nothing is sent to a server. Use <b>Export</b> to keep a copy.</li>
+      <li>Webcam video is processed on your device by MediaPipe and never leaves it.</li>
+      <li>Loading the page fetches: the 3D library and hand-tracking code from <code>cdn.jsdelivr.net</code>, the hand-tracking model from <code>storage.googleapis.com</code>, and fonts from <code>fonts.googleapis.com</code>. These requests carry no information about you beyond the ordinary web request. There are <b>no analytics</b> and no cookies.</li>
+    </ul>
+
+    <h2>Changes</h2>
+    <ul id="changelog">
+      <li><b>0.3.0</b> — Red-flag checklist first; evidence-based labels instead of "Strong fit"; "Don't miss" list; left/right hand and both-hands; duration; three new symptom tags (red/hot, wound, can't move); 50 conditions with 74 verified sources; gout, CRPS, injection injury, lacerations and septic infection added; injury gating for self-checks and exercises; printable summary, export/import and a pain diary; crash fixes; accessibility pass.</li>
+      <li><b>0.2.0</b> — Sources on every condition and self-check; content review; anatomical bones and skin detail.</li>
+      <li><b>0.1.0</b> — First release: layered 3D hand, webcam pointing, pain map, nerve map, self-checks.</li>
+    </ul>
+    <p><a href="https://github.com/TarunT27/hand-pain-explorer">Source code and licence (MIT)</a></p>
+  </main>
+  <script type="module">
+    import { REFS, CONTENT_REVIEW } from './js/content.js';
+    document.querySelector('#reviewDate').textContent = 'Last checked ' + CONTENT_REVIEW.date;
+    const byOrg = {};
+    for (const r of Object.values(REFS)) (byOrg[r.org] = byOrg[r.org] || []).push(r);
+    document.querySelector('#sourceList').innerHTML = Object.entries(byOrg).map(([org, list]) => `<h3>${org} <small>(${list.length})</small></h3><ul>${list.sort((a, b) => a.title.localeCompare(b.title)).map((r) => `<li><a href="${r.url}" rel="noopener">${r.title}</a></li>`).join('')}</ul>`).join('');
+  </script>
+</body>
+</html>

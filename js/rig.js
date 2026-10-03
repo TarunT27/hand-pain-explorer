@@ -7,20 +7,15 @@ import { phalanxGeometry, distalPhalanxGeometry, metacarpalGeometry, carpalGeome
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
-export const FINGERS = [
-  { key: 'index', code: 'I', label: 'Index finger', mcp: V(2.45, 9.3, 0.0), base: V(1.55, 2.95, -0.05), len: [4.0, 2.4, 1.85], r: [0.5, 0.44, 0.38], skin: 1.0 },
-  { key: 'middle', code: 'M', label: 'Middle finger', mcp: V(0.65, 9.6, -0.05), base: V(0.45, 3.05, -0.1), len: [4.45, 2.75, 1.95], r: [0.53, 0.46, 0.4], skin: 1.04 },
-  { key: 'ring', code: 'R', label: 'Ring finger', mcp: V(-1.15, 9.15, 0.1), base: V(-0.75, 2.9, 0.0), len: [4.15, 2.65, 1.9], r: [0.49, 0.43, 0.37], skin: 0.97 },
-  { key: 'pinky', code: 'P', label: 'Little finger', mcp: V(-2.8, 8.25, 0.35), base: V(-1.85, 2.65, 0.15), len: [3.3, 1.95, 1.65], r: [0.42, 0.37, 0.33], skin: 0.86 },
-];
+import { FINGER_DATA, THUMB_DATA } from './hand-data.js';
+
+export const FINGERS = FINGER_DATA.map((f) => ({ ...f, mcp: V(...f.mcp), base: V(...f.base) }));
 
 export const THUMB = {
-  key: 'thumb', code: 'T', label: 'Thumb',
-  cmc: V(2.5, 2.7, 0.7),
-  dir: V(0.5, 0.8, 0.3).normalize(),
-  flexDir: V(-0.9, 0.05, 0.45),
-  len: [4.6, 3.2, 2.45],
-  r: [0.52, 0.5, 0.44],
+  ...THUMB_DATA,
+  cmc: V(...THUMB_DATA.cmc),
+  dir: V(...THUMB_DATA.dir).normalize(),
+  flexDir: V(...THUMB_DATA.flexDir),
 };
 
 // Basis of the thumb chain: Y along the metacarpal, Z toward the pad (flexion side), X hinge axis.
@@ -167,17 +162,28 @@ export class HandRig {
   }
 
   // ---------- pose ----------
+  // Applies a pose and returns true if any joint moved by more than a hair,
+  // so callers can skip rebuilding tendons when the hand is still.
   applyPose(p) {
-    this.wrist.rotation.set(p.wrist.flex, 0, -p.wrist.dev);
+    const eps = 1e-4;
+    let changed = false;
+    const setRot = (o, x, y, z) => {
+      if (Math.abs(o.rotation.x - x) > eps || Math.abs(o.rotation.y - y) > eps || Math.abs(o.rotation.z - z) > eps) { o.rotation.set(x, y, z); changed = true; }
+    };
+    setRot(this.wrist, p.wrist.flex, 0, -p.wrist.dev);
     for (let i = 0; i < 4; i++) {
       const f = this.fingers[i], q = p.fingers[i];
-      f.j1.rotation.set(q.mcp, 0, -q.abd);
-      f.j2.rotation.set(q.pip, 0, 0);
-      f.j3.rotation.set(q.dip, 0, 0);
+      setRot(f.j1, q.mcp, 0, -q.abd);
+      setRot(f.j2, q.pip, 0, 0);
+      setRot(f.j3, q.dip, 0, 0);
     }
-    this.thumb.j1.quaternion.copy(p.thumb.cmc);
-    this.thumb.j2.rotation.set(p.thumb.mcp, 0, 0);
-    this.thumb.j3.rotation.set(p.thumb.ip, 0, 0);
+    if (Math.abs(this.thumb.j1.quaternion.dot(p.thumb.cmc)) < 1 - eps) { this.thumb.j1.quaternion.copy(p.thumb.cmc); changed = true; }
+    setRot(this.thumb.j2, p.thumb.mcp, 0, 0);
+    setRot(this.thumb.j3, p.thumb.ip, 0, 0);
+    if (this._lastMirror !== undefined && this._lastMirror !== this.pivot.scale.x) changed = true;
+    this._lastMirror = this.pivot.scale.x;
+    if (!this._posed) { this._posed = true; changed = true; }
+    return changed;
   }
 
   // World positions of MediaPipe-equivalent landmarks (0..20) plus 21 = forearm point.

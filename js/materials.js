@@ -19,6 +19,7 @@ export const G = {
   uHot2: { value: new THREE.Vector3() },            // deep end of the glowing column
   uHotAmt: { value: 0 },
   uHover: { value: new THREE.Vector4(0, 0, 0, 0) },
+  uReduceMotion: { value: 0 },
   uPins: { value: Array.from({ length: 8 }, () => new THREE.Vector4()) },   // saved pain spots: xyz + intensity
   uPinCount: { value: 0 },
 };
@@ -71,7 +72,7 @@ export function dissolveValue(lp, q) {
 const FRAG_HEAD = /* glsl */`
 varying vec3 vWPos;
 uniform float uTime; uniform mat4 uRootInv; uniform vec4 uHot; uniform vec3 uHot2; uniform float uHotAmt; uniform vec4 uHover;
-uniform float uQ; uniform float uHi;
+uniform float uQ; uniform float uHi; uniform float uReduceMotion;
 uniform vec4 uPins[8]; uniform int uPinCount;
 ${NOISE_GLSL}
 `;
@@ -94,8 +95,8 @@ const FRAG_EMISSIVE = /* glsl */`
   if (uHot.w > 0.0) {
     float dd = hpSegDist(vWPos, uHot.xyz, uHot2) / uHot.w;
     float k = 1.0 - smoothstep(0.0, 1.0, dd);
-    float pulse = 0.7 + 0.3 * sin(uTime * 4.0);
-    float ripple = smoothstep(0.12, 0.0, abs(dd - fract(uTime * 0.55))) * (1.0 - fract(uTime * 0.55));
+    float pulse = mix(0.7 + 0.3 * sin(uTime * 4.0), 1.0, uReduceMotion);
+    float ripple = smoothstep(0.12, 0.0, abs(dd - fract(uTime * 0.55))) * (1.0 - fract(uTime * 0.55)) * (1.0 - uReduceMotion);
     totalEmissiveRadiance += vec3(1.0, 0.16, 0.1) * (k * k * pulse * 1.3 + ripple * 0.8) * uHotAmt;
   }
   if (uHover.w > 0.0) {
@@ -109,7 +110,7 @@ const FRAG_EMISSIVE = /* glsl */`
     hpHeat += uPins[i].w * exp(-d * d / 1.6);
   }
   totalEmissiveRadiance += mix(vec3(1.0, 0.6, 0.15), vec3(1.0, 0.1, 0.05), clamp(hpHeat, 0.0, 1.0)) * smoothstep(0.03, 0.9, hpHeat) * 0.55;
-  totalEmissiveRadiance += vec3(0.25, 0.62, 1.0) * uHi * (0.6 + 0.4 * sin(uTime * 6.0)) * (0.7 + 1.6 * hpRim);
+  totalEmissiveRadiance += vec3(0.25, 0.62, 1.0) * uHi * mix(0.6 + 0.4 * sin(uTime * 6.0), 1.0, uReduceMotion) * (0.7 + 1.6 * hpRim);
 }
 `;
 
@@ -123,6 +124,7 @@ export function patchMaterial(mat, layerIndex) {
     shader.uniforms.uHot2 = G.uHot2;
     shader.uniforms.uHotAmt = G.uHotAmt;
     shader.uniforms.uHover = G.uHover;
+    shader.uniforms.uReduceMotion = G.uReduceMotion;
     shader.uniforms.uPins = G.uPins;
     shader.uniforms.uPinCount = G.uPinCount;
     shader.uniforms.uQ = layerQ[layerIndex];
