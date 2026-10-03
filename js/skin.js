@@ -62,7 +62,7 @@ uniform float uQ; uniform float uGhost; uniform mat4 uViewProj;
 uniform vec3 uSegX[NSEG]; uniform vec3 uSegZ[NSEG]; uniform float uSegT[NSEG];
 uniform vec3 uWristO; uniform vec3 uWristX; uniform float uNerveMap; uniform mat4 uWristInv;
 uniform vec4 uPins[8]; uniform int uPinCount;
-uniform mat4 uRootInv; uniform float uTime; uniform vec4 uHot; uniform vec3 uHot2; uniform float uHotAmt; uniform vec4 uHover;
+uniform mat4 uRootInv; uniform float uTime; uniform vec4 uHot; uniform vec3 uHot2; uniform float uHotAmt; uniform vec4 uHover; uniform float uReduceMotion;
 varying vec3 vWorld;
 ${NOISE_GLSL}
 
@@ -114,6 +114,7 @@ int territory(vec3 p, vec3 N, int bi) {
   if (t < 0.5) return 0;
   if (t < 1.5) return wx > -0.95 ? (palmar ? 1 : 3) : 2;
   if (t < 2.5) return 2;
+  if (t > 4.1 && t < 4.5) { float along = dot(p - uA[bi].xyz, normalize(uB[bi].xyz - uA[bi].xyz)) / max(length(uB[bi].xyz - uA[bi].xyz), 0.01); if (!palmar && along > 0.6) return 1; }
   if (t < 4.5) return palmar ? 1 : 3;
   int fi = int(t + 0.5) - 10;
   int f = fi / 3; int s = fi - f * 3;
@@ -260,6 +261,9 @@ void main() {
       int tr = territory(p, N, bi);
       if (tr > 0) {
         vec3 nc = tr == 1 ? vec3(0.95, 0.52, 0.06) : tr == 2 ? vec3(0.42, 0.28, 0.95) : vec3(0.04, 0.62, 0.52);
+        // pattern per nerve so the map doesn't rely on colour alone: stripes (median), cross-hatch (ulnar), dots (radial)
+        float pat = tr == 1 ? step(0.5, fract(lp.x * 2.2)) : tr == 2 ? step(0.5, fract(lp.x * 2.2 + lp.y * 2.2)) : step(0.72, length(fract(lp.xy * 2.6) - 0.5) < 0.22 ? 1.0 : 0.0);
+        nc *= 0.86 + 0.14 * pat;
         col = mix(col, nc * (0.35 + 0.8 * wrap) * aoS + spec, 0.62 * uNerveMap);
       }
     }
@@ -280,8 +284,8 @@ void main() {
   if (uHot.w > 0.0) {
     float dd = hpSegDist(p, uHot.xyz, uHot2) / uHot.w;
     float k = 1.0 - smoothstep(0.0, 1.0, dd);
-    float pulse = 0.7 + 0.3 * sin(uTime * 4.0);
-    float ripple = smoothstep(0.12, 0.0, abs(dd - fract(uTime * 0.55))) * (1.0 - fract(uTime * 0.55));
+    float pulse = mix(0.7 + 0.3 * sin(uTime * 4.0), 1.0, uReduceMotion);
+    float ripple = smoothstep(0.12, 0.0, abs(dd - fract(uTime * 0.55))) * (1.0 - fract(uTime * 0.55)) * (1.0 - uReduceMotion);
     float core = smoothstep(1.0, 0.25, dd);
     col = mix(col, vec3(0.78, 0.07, 0.05), core * uHotAmt * 0.82);
     col += vec3(1.0, 0.2, 0.1) * (core * pulse * 0.55 + ripple * 1.4) * uHotAmt;
@@ -344,7 +348,7 @@ export class Skin {
       uSegX: { value: vec3s(NSEG) }, uSegZ: { value: vec3s(NSEG) }, uSegT: { value: new Array(NSEG).fill(0) },
       uWristO: { value: new THREE.Vector3() }, uWristX: { value: new THREE.Vector3(1, 0, 0) }, uNerveMap: { value: 0 }, uWristInv: { value: new THREE.Matrix4() },
       uPins: G.uPins, uPinCount: G.uPinCount,
-      uRootInv: G.uRootInv, uTime: G.uTime, uHot: G.uHot, uHot2: G.uHot2, uHotAmt: G.uHotAmt, uHover: G.uHover,
+      uRootInv: G.uRootInv, uTime: G.uTime, uHot: G.uHot, uHot2: G.uHot2, uHotAmt: G.uHotAmt, uHover: G.uHover, uReduceMotion: G.uReduceMotion,
     };
     this.setTone('#dca58c');
     this.material = new THREE.ShaderMaterial({
@@ -454,6 +458,7 @@ export class Skin {
     if (t === 0) return null;
     if (t === 1) return name[wx > -0.95 ? (palmar ? 1 : 3) : 2];
     if (t === 2) return 'ulnar';
+    if (t > 4.1 && t < 4.5 && !palmar) { const axis = s.B.clone().sub(s.A); const along = p.clone().sub(s.A).dot(axis) / Math.max(axis.lengthSq(), 1e-4); if (along > 0.6) return 'median'; }
     if (t < 4.5) return palmar ? 'median' : 'radial';
     const fi = t - 10, f = Math.floor(fi / 3), sg = fi - f * 3;
     if (f === 3) return 'ulnar';

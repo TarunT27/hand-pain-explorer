@@ -1,0 +1,53 @@
+name: Clinical correction
+description: Report something medically wrong, misleading or missing
+title: "[correction] "
+labels: [clinical-review]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Condition, self-check or area
+      description: The name shown in the app, or the id from js/content.js if you know it
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: What the app says now
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: What it should say
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source (URL or citation)
+      description: A guideline, textbook or peer-reviewed reference that supports the change
+  - type: dropdown
+    id: role
+    attributes:
+      label: Your background
+      options:
+        - Hand surgeon
+        - Hand therapist / physiotherapist / occupational therapist
+        - GP / family doctor
+        - Other clinician
+        - Patient / member of the public
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: coi
+    attributes:
+      label: Conflicts of interest (if any)
+      description: For example, employment by a device or drug company relevant to the change
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Credit
+      options:
+        - label: You may credit me by name in REVIEWERS.md if this change is adopted

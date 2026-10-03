@@ -21,12 +21,10 @@ export class Tracker {
     this.running = false;
   }
 
+  // Load the model first and ask for the camera last, so a failed download
+  // never leaves the camera light on. Later starts reuse the loaded model.
   async start(video, onStatus = () => {}) {
     this.video = video;
-    onStatus('Requesting camera…');
-    this.stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 960 }, height: { ideal: 540 }, facingMode: 'user' }, audio: false });
-    video.srcObject = this.stream;
-    await video.play();
     if (!this.landmarker) {
       onStatus('Loading hand-tracking model…');
       const { FilesetResolver, HandLandmarker } = await import(`${MP_URL}/vision_bundle.mjs`);
@@ -42,6 +40,15 @@ export class Tracker {
         console.warn('GPU delegate failed, using CPU', err);
         this.landmarker = await HandLandmarker.createFromOptions(fileset, opts('CPU'));
       }
+    }
+    onStatus('Requesting camera…');
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 960 }, height: { ideal: 540 }, facingMode: 'user' }, audio: false });
+      video.srcObject = this.stream;
+      await video.play();
+    } catch (err) {
+      this.stop();
+      throw err;
     }
     this.running = true;
     onStatus('Tracking');

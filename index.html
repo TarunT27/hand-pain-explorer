@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Hand Pain Explorer</title>
   <meta name="description" content="Interactive 3D hand anatomy: peel back skin, muscles, tendons and nerves, point at a sore spot with your webcam, and explore possible causes and recovery tips.">
+  <meta name="theme-color" content="#0a0f15">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://tarunt27.github.io/hand-pain-explorer/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Hand Pain Explorer">
+  <meta property="og:description" content="An interactive 3D hand: peel back the layers, point to what hurts, and learn what commonly causes pain there and what helps. Education, not diagnosis.">
+  <meta property="og:image" content="https://tarunt27.github.io/hand-pain-explorer/docs/og.png">
+  <meta property="og:url" content="https://tarunt27.github.io/hand-pain-explorer/">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -17,7 +26,9 @@
   </script>
 </head>
 <body>
-  <canvas id="scene" aria-label="Interactive 3D model of a hand"></canvas>
+  <canvas id="scene" tabindex="0" role="img" aria-describedby="sceneDesc"></canvas>
+  <p id="sceneDesc" class="visually-hidden">Interactive 3D model of a hand.</p>
+  <div id="announce" class="visually-hidden" aria-live="polite" role="status"></div>
 
   <header class="topbar">
     <div class="brand">
@@ -28,38 +39,43 @@
       </div>
     </div>
     <div class="top-actions">
-      <button id="btnMap" class="btn ghost" title="Your pain map and what might fit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.4"/></svg><span>Pain map</span><b id="mapCount" class="count">0</b></button>
-      <button id="btnCam" class="btn primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="2.5"/></svg><span>Use webcam</span></button>
+      <button id="btnMap" class="btn primary" aria-label="My pain map, 0 spots"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.4"/></svg><span>My pain map</span><b id="mapCount" class="count">0</b></button>
+      <button id="btnCam" class="btn ghost" aria-pressed="false" aria-label="Use webcam"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="2.5"/></svg><span>Use webcam</span></button>
       <button id="btnHelp" class="btn ghost round" aria-label="How it works">?</button>
     </div>
   </header>
 
-  <button id="layersToggle" class="btn ghost mobile-only layers-toggle">Layers &amp; poses</button>
+  <button id="layersToggle" class="btn ghost mobile-only layers-toggle" aria-expanded="false" aria-controls="leftPanel">Pose &amp; movements</button>
+  <div id="layerStrip" class="layer-strip mobile-only" aria-label="See inside"></div>
 
   <aside class="panel left" id="leftPanel">
     <section class="card">
-      <div class="card-head"><h2>Layers</h2><span class="hint">drag to peel</span></div>
-      <input type="range" id="peel" min="0" max="4" step="0.01" value="0" aria-label="Peel depth">
+      <div class="card-head"><h2>See inside</h2><span class="hint">slide right: skin → muscles → bones</span></div>
+      <input type="range" id="peel" min="0" max="4" step="0.01" value="0" aria-label="Peel depth: slide right to see inside the hand">
       <div class="peel-scale"><span>Skin</span><span>Bone</span></div>
       <ul class="layers" id="layerList"></ul>
-      <div class="row between">
+      <div class="row between" id="ghostRow" hidden>
         <label class="toggle"><input type="checkbox" id="ghost" checked><span class="sw"></span>Skin outline</label>
-        <div class="tones" id="tones" aria-label="Skin tone"></div>
+        <div class="tones" id="tones" role="radiogroup" aria-label="Skin tone"></div>
       </div>
       <div class="row between">
         <label class="toggle" title="Colour the skin by which nerve supplies its feeling"><input type="checkbox" id="nerveMap"><span class="sw"></span>Nerve map</label>
-        <span class="hint">sensation areas</span>
+        <label class="toggle" title="Stop the idle sway, breathing and pulsing"><input type="checkbox" id="motion"><span class="sw"></span>Reduce motion</label>
       </div>
     </section>
     <section class="card">
-      <div class="card-head"><h2>Pose &amp; view</h2></div>
-      <div class="chips" id="poses"></div>
-      <div class="views">
-        <button class="seg active" data-view="palm">Palm</button>
-        <button class="seg" data-view="back">Back</button>
-        <button class="seg" data-view="thumb">Thumb side</button>
-        <button class="seg" data-view="pinky">Pinky side</button>
-        <button class="seg icon" id="resetView" title="Reset camera" aria-label="Reset camera"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></svg></button>
+      <div class="card-head"><h2>Hand, pose &amp; view</h2></div>
+      <div class="hand-pick seg-group" role="radiogroup" aria-label="Which hand">
+        <button class="seg-btn on" role="radio" aria-checked="true" data-hand="Right">Right hand</button>
+        <button class="seg-btn" role="radio" aria-checked="false" data-hand="Left">Left hand</button>
+      </div>
+      <div class="chips" id="poses" role="radiogroup" aria-label="Pose"></div>
+      <div class="views" role="radiogroup" aria-label="View">
+        <button class="seg active" role="radio" aria-checked="true" data-view="palm">Palm</button>
+        <button class="seg" role="radio" aria-checked="false" data-view="back">Back</button>
+        <button class="seg" role="radio" aria-checked="false" data-view="thumb">Thumb side</button>
+        <button class="seg" role="radio" aria-checked="false" data-view="pinky">Pinky side</button>
+        <button class="seg icon" id="resetView" title="Reset camera (R)" aria-label="Reset camera"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></svg></button>
       </div>
     </section>
     <section class="card">
@@ -68,14 +84,14 @@
     </section>
   </aside>
 
-  <aside class="panel right" id="info" aria-live="polite"></aside>
+  <aside class="panel right" id="info" role="region" aria-labelledby="infoTitle"></aside>
 
   <div class="cam-dock" id="camDock" hidden>
     <div class="cam-view">
       <video id="video" playsinline muted></video>
       <canvas id="overlay"></canvas>
-      <div class="cam-badge" id="camStatus">Starting…</div>
     </div>
+    <div class="cam-badge" id="camStatus" aria-live="polite">Starting…</div>
     <div class="cam-controls">
       <label class="toggle small"><input type="checkbox" id="followRot" checked><span class="sw"></span>Follow wrist rotation</label>
       <button class="btn tiny" id="btnSwap" title="Use if the 3D hand looks like the wrong hand">Swap L/R</button>
@@ -97,23 +113,25 @@
     <div class="dwell-label"></div>
   </div>
   <div id="exBar" class="ex-bar" hidden>
-    <div class="ex-bar-top"><b id="exTitle"></b><button class="btn tiny" id="exStop">Stop</button></div>
-    <div id="exCaption" class="ex-caption"></div>
+    <div class="ex-bar-top"><b id="exTitle"></b><span id="exCount" class="ex-count" aria-hidden="true"></span><button class="btn tiny" id="exStop">Stop</button></div>
+    <div id="exCaption" class="ex-caption" aria-live="polite"></div>
+    <div id="exAnswer" class="ex-answer" hidden></div>
     <div class="ex-track"><div id="exProgress"></div></div>
   </div>
   <div id="toast" class="toast" role="status"></div>
   <div id="loading" class="loading"><div class="spinner"></div><p>Building the hand…</p></div>
+  <section id="printSheet" class="print-sheet" aria-hidden="true"></section>
 
-  <dialog id="helpDlg">
-    <h2>How it works</h2>
+  <dialog id="helpDlg" aria-labelledby="helpTitle">
+    <h2 id="helpTitle">How it works</h2>
     <ul>
-      <li><b>Explore:</b> drag to orbit, scroll to zoom, hover to name any structure, click a spot to see possible causes of pain there.</li>
-      <li><b>Peel:</b> drag the Layers slider (or press <kbd>[</kbd> <kbd>]</kbd>) to dissolve skin, then muscles, tendons and nerves down to the bones.</li>
-      <li><b>Pain map:</b> save each sore spot with a 0–10 pain level and what it feels like. <b>What might fit</b> combines your spots, numbness pattern and self-check answers into a ranked list you can copy for a clinician. Saved only in this browser.</li>
+      <li><b>Explore:</b> drag to orbit, scroll to zoom, hover (or tap) to name any structure, click a spot to see possible causes of pain there. Keyboard: focus the model, then arrow keys rotate, <kbd>+</kbd> <kbd>−</kbd> zoom, <kbd>R</kbd> resets.</li>
+      <li><b>See inside:</b> drag the slider (or press <kbd>[</kbd> <kbd>]</kbd>) to peel skin, then muscles, tendons and nerves down to the bones.</li>
+      <li><b>My pain map:</b> save each sore spot with a 0–10 pain level, how long it has hurt and what it feels like. <b>What might fit</b> combines your spots, numbness pattern, red-flag answers and self-check answers into a ranked list you can print or copy for a clinician. Saved only in this browser; export it as a file to keep it.</li>
       <li><b>Webcam:</b> hold one hand up and the 3D hand copies your pose and rotation. Point at a sore spot on that hand with your other index finger and hold still to open it. Pinch with both hands and pull apart to peel.</li>
-      <li><b>Movements:</b> play gentle exercises on the model — tendon glides, nerve glides, thumb circles and more.</li>
+      <li><b>Movements:</b> play gentle movements on the model — tendon glides, nerve glides, thumb circles and more. They are withheld for spots you've marked as injured.</li>
     </ul>
-    <p class="privacy">Video is processed on your device by MediaPipe and never uploaded.</p>
+    <p class="privacy">Video is processed on your device by MediaPipe and never uploaded. There are no analytics.</p>
     <h3>Sources &amp; review</h3>
     <div id="reviewInfo" class="review-info"></div>
     <p class="disclaimer">This is an educational tool, not medical advice. It can't diagnose you. If pain is severe, follows an injury, lasts more than a couple of weeks, or comes with numbness, weakness, fever or colour change, see a clinician.</p>
